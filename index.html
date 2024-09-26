@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Waveform Effect</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <button id="playButton">Play Music</button>
+
+    <div class="waveform" id="waveform">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <audio id="bgAudio" loop>
+        <source src="bgaudio.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        const audio = document.getElementById('bgAudio');
+        const playButton = document.getElementById('playButton');
+        const bars = document.querySelectorAll('.bar');
+        
+        let audioContext, analyser, source, frequencyData;
+
+        // Set up the audio context and analyser
+        function setupAudioContext() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 64; // Low resolution for fewer bars
+            frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+            source = audioContext.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+        }
+
+        // Animate the bars based on the audio frequencies
+        function animateWaveform() {
+            requestAnimationFrame(animateWaveform);
+            analyser.getByteFrequencyData(frequencyData);
+
+            bars.forEach((bar, index) => {
+                const barHeight = frequencyData[index] / 2; // Scale the height
+                bar.style.height = barHeight + 'px';
+            });
+        }
+
+        // Play music and start the animation
+        playButton.addEventListener('click', function() {
+            if (!audioContext) {
+                setupAudioContext();
+            }
+            audio.play();
+            playButton.style.display = 'none';
+            animateWaveform();
+        });
+    </script>
+</body>
+</html>
